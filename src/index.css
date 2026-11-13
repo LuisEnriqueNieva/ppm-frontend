@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/* Color de acento: cambia según el tenant (ver lib/tenants.ts) */
+@theme inline {
+  --color-acento: var(--acento);
+}
+
+/* Paleta inspirada en Notion: neutros cálidos, bordes finos, color sólo donde aporta */
+@theme {
+  --color-texto: #37352f;
+  --color-suave: rgba(55, 53, 47, 0.65);
+  --color-tenue: rgba(55, 53, 47, 0.45);
+  --color-linea: rgba(55, 53, 47, 0.09);
+  --color-hover: rgba(55, 53, 47, 0.06);
+  --color-lateral: #f7f7f5;
+  --color-bloque: #f1f1ef;
+  --color-azul: #2383e2;
+  --font-sans: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+:root {
+  --acento: #2383e2;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #fff;
+  color: #37352f;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(35, 131, 226, 0.28) }
+
+/* Sombras tipo Notion para elementos flotantes */
+.sombra-tarjeta { box-shadow: rgba(15, 15, 15, 0.1) 0 0 0 1px, rgba(15, 15, 15, 0.1) 0 2px 4px }
+.sombra-flotante {
+  box-shadow: rgba(15, 15, 15, 0.05) 0 0 0 1px, rgba(15, 15, 15, 0.1) 0 3px 6px, rgba(15, 15, 15, 0.2) 0 9px 24px;
+}
+
+/* ---------- Animaciones (suaves, cortas) ---------- */
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(6px) }
+  to { opacity: 1; transform: none }
+}
+@keyframes emerger {
+  from { opacity: 0; transform: scale(.98) }
+  to { opacity: 1; transform: none }
+}
+.anim-aparecer { animation: aparecer .35s cubic-bezier(.2, .7, .3, 1) both }
+.anim-emerger { animation: emerger .18s ease-out both }
+
+/* Aparece al hacer scroll (la clase .visible la pone un IntersectionObserver) */
+.revelar {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s ease, transform .6s cubic-bezier(.2, .7, .3, 1);
+}
+.revelar.visible { opacity: 1; transform: none }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-aparecer, .anim-emerger { animation: none }
+  .revelar { opacity: 1; transform: none; transition: none }
+}
