@@ -7,6 +7,10 @@ import { Icono } from './Iconos'
 const PAGINAS = [
   { to: '/', titulo: 'Dashboard', emoji: '📊' },
   { to: '/proyectos', titulo: 'Proyectos', emoji: '🗂️' },
+  { to: '/portafolios', titulo: 'Portafolios', emoji: '📁' },
+  { to: '/recursos', titulo: 'Recursos', emoji: '👥' },
+  { to: '/priorizacion', titulo: 'Priorización', emoji: '🎯' },
+  { to: '/usuarios', titulo: 'Usuarios', emoji: '👤' },
 ]
 
 const enlace = ({ isActive }: { isActive: boolean }) =>
@@ -24,7 +28,7 @@ export default function Layout() {
 
   if (!sesion) return null
   const tenant = nombreDeTenant(sesion.tenant_id)
-  const actual = PAGINAS.find((p) => p.to === pathname) ?? PAGINAS[0]
+  const actual = PAGINAS.find((p) => (p.to === '/' ? pathname === '/' : pathname.startsWith(p.to))) ?? PAGINAS[0]
 
   return (
     <div className="flex min-h-screen bg-white text-texto">
@@ -50,8 +54,8 @@ export default function Layout() {
 
         <p className="mb-1 mt-4 px-4 text-xs font-medium text-tenue">Espacio de trabajo</p>
         <nav className="flex flex-col gap-px px-2">
-          {PAGINAS.map((p) => (
-            <NavLink key={p.to} to={p.to} end className={enlace}>
+          {PAGINAS.filter((p) => p.to !== '/usuarios' || sesion.rol === 'ADMIN').map((p) => (
+            <NavLink key={p.to} to={p.to} end={p.to === '/'} className={enlace}>
               <span className="w-[18px] text-center text-[15px] leading-none">{p.emoji}</span> {p.titulo}
             </NavLink>
           ))}

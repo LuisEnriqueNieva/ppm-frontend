@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom'
 import { useProyectos, type FiltroProyectos } from '../lib/hooks'
 import { fecha } from '../lib/formato'
 import { Icono } from './Iconos'
+import { AccionesProyecto } from './AccionesProyecto'
 import { Avance, Cargando, ErrorMsg, EstadoBadge, ExcedidoBadge, PrioridadBadge } from './ui'
 
 const COLUMNAS: [string, string, string][] = [
@@ -42,11 +44,12 @@ export default function VistaTabla({ filtro, nombrePortafolio, onNuevo }: {
           </thead>
           <tbody>
             {filas.map((p) => (
-              <tr key={p.proyecto_id} className="border-b border-linea transition hover:bg-[#fbfbfa]">
+              <tr key={p.proyecto_id} className="group border-b border-linea transition hover:bg-[#fbfbfa]">
                 <td className={celda}>
                   <span className="flex items-center gap-2 font-medium" title={p.proyecto_id}>
                     <Icono n="pagina" className="h-4 w-4 text-tenue" />
-                    <span className="truncate">{p.nombre}</span>
+                    <Link to={`/proyectos/${p.proyecto_id}`} className="min-w-0 flex-1 truncate hover:underline">{p.nombre}</Link>
+                    <AccionesProyecto id={p.proyecto_id} nombre={p.nombre} />
                   </span>
                 </td>
                 <td className={`${celda} text-suave`}>{nombrePortafolio(p.portafolio_id)}</td>

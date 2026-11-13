@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { put } from '../lib/api'
 import { useProyectos } from '../lib/hooks'
 import { fecha } from '../lib/formato'
 import { ESTADOS, type EstadoProyecto, type Proyecto } from '../lib/tipos'
 import { Icono } from './Iconos'
+import { AccionesProyecto } from './AccionesProyecto'
 import { Avance, Cargando, ErrorMsg, EstadoBadge, ExcedidoBadge, PrioridadBadge } from './ui'
 
 // Fondo levemente teñido por grupo, como los tableros de Notion
@@ -58,8 +60,9 @@ function Columna({ estado, nombrePortafolio, onSoltar, onNuevo }: {
           >
             <p className="flex items-start gap-1.5 text-sm font-medium leading-snug">
               <Icono n="pagina" className="mt-0.5 h-4 w-4 text-tenue" />
-              <span className="min-w-0 flex-1">{p.nombre}</span>
+              <Link to={`/proyectos/${p.proyecto_id}`} draggable={false} className="min-w-0 flex-1 hover:underline">{p.nombre}</Link>
               <Icono n="arrastrar" className="mt-0.5 h-4 w-4 text-tenue opacity-0 transition group-hover:opacity-100" />
+              <AccionesProyecto id={p.proyecto_id} nombre={p.nombre} />
             </p>
             <p className="mb-2 mt-1 truncate text-xs text-suave">{nombrePortafolio(p.portafolio_id)}</p>
             <div className="mb-2 flex flex-wrap gap-1">

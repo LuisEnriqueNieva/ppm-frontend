@@ -27,6 +27,17 @@ const TRAZOS: Record<string, ReactNode> = {
   check: <path d="m5 12 4.5 4.5L19 7" />,
   pagina: <path d="M7 3h7l5 5v13H7zM14 3v5h5" />,
   arrastrar: <path d="M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01" />,
+  editar: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4" />,
+  basura: <path d="M5 7h14M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  clip: <path d="m20 11-8.5 8.5a5 5 0 0 1-7-7L13 4a3.3 3.3 0 0 1 5 5l-8.5 8.5a1.7 1.7 0 0 1-2.5-2.5L14 8" />,
+  usuario: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />,
+  objetivo: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" />
+    </>
+  ),
 }
 
 export const Icono = ({ n, className = 'h-4 w-4' }: { n: string; className?: string }) => (
