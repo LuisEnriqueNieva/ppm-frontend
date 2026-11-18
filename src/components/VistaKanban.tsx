@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { put } from '../lib/api'
-import { useProyectos } from '../lib/hooks'
-import { fecha } from '../lib/formato'
+import { useCargarTodo, useProyectos } from '../lib/hooks'
+import { coincide, fecha } from '../lib/formato'
 import { ESTADOS, type EstadoProyecto, type Proyecto } from '../lib/tipos'
 import { Icono } from './Iconos'
 import { AccionesProyecto } from './AccionesProyecto'
@@ -16,15 +16,18 @@ const FONDO_COLUMNA: Record<EstadoProyecto, string> = {
   COMPLETADO: 'bg-[#f6faf6]',
 }
 
-function Columna({ estado, nombrePortafolio, onSoltar, onNuevo }: {
+function Columna({ estado, portafolio, texto, nombrePortafolio, onSoltar, onNuevo }: {
   estado: EstadoProyecto
+  portafolio: string
+  texto: string
   nombrePortafolio: (id?: string) => string
   onSoltar: (proyecto_id: string, estadoOrigen: string, destino: EstadoProyecto) => void
   onNuevo?: (estado: EstadoProyecto) => void
 }) {
-  const q = useProyectos({ estado }, 10)
+  const q = useProyectos({ estado, ...(portafolio ? { portafolio_id: portafolio } : {}) }, 10)
+  useCargarTodo(q, !!texto.trim())
   const [encima, setEncima] = useState(false)
-  const items: Proyecto[] = q.data?.pages.flatMap((p) => p.items) ?? []
+  const items: Proyecto[] = (q.data?.pages.flatMap((p) => p.items) ?? []).filter((p) => coincide(p.nombre, texto))
 
   return (
     <div
@@ -99,7 +102,9 @@ function Columna({ estado, nombrePortafolio, onSoltar, onNuevo }: {
   )
 }
 
-export default function VistaKanban({ nombrePortafolio, onNuevo }: {
+export default function VistaKanban({ portafolio = '', texto = '', nombrePortafolio, onNuevo }: {
+  portafolio?: string
+  texto?: string
   nombrePortafolio: (id?: string) => string
   onNuevo?: (estado: EstadoProyecto) => void
 }) {
@@ -120,6 +125,8 @@ export default function VistaKanban({ nombrePortafolio, onNuevo }: {
           <Columna
             key={e}
             estado={e}
+            portafolio={portafolio}
+            texto={texto}
             nombrePortafolio={nombrePortafolio}
             onNuevo={onNuevo}
             onSoltar={(id, origen, destino) => {

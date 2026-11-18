@@ -7,8 +7,10 @@ import { Icono } from './Iconos'
 const PAGINAS = [
   { to: '/', titulo: 'Dashboard', emoji: '📊' },
   { to: '/proyectos', titulo: 'Proyectos', emoji: '🗂️' },
+  { to: '/tareas', titulo: 'Tareas', emoji: '📋' },
   { to: '/portafolios', titulo: 'Portafolios', emoji: '📁' },
   { to: '/recursos', titulo: 'Recursos', emoji: '👥' },
+  { to: '/presupuestos', titulo: 'Presupuestos', emoji: '💰' },
   { to: '/priorizacion', titulo: 'Priorización', emoji: '🎯' },
   { to: '/usuarios', titulo: 'Usuarios', emoji: '👤' },
 ]

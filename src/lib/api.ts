@@ -38,20 +38,36 @@ export class ApiError extends Error {
   }
 }
 
+// Maximo 2 peticiones al mismo tiempo (cada una ejecuta 1 Lambda, y a veces otra para validar el token).
+// Asi nunca hay muchos Lambdas simultaneos en el Learner Lab, sin importar cuantas pantallas pidan datos.
+const MAX_SIMULTANEAS = 2
+let enCurso = 0
+const espera: Array<() => void> = []
+async function conTurno<T>(tarea: () => Promise<T>): Promise<T> {
+  if (enCurso >= MAX_SIMULTANEAS) await new Promise<void>((seguir) => espera.push(seguir))
+  enCurso++
+  try {
+    return await tarea()
+  } finally {
+    enCurso--
+    espera.shift()?.()
+  }
+}
+
 async function llamar<T>(micro: Micro, metodo: string, ruta: string, body?: unknown): Promise<T> {
   const base = BASES[micro]
   if (!base) throw new ApiError(0, `Falta la URL de ${micro} en el archivo .env`)
   const sesion = leerSesion()
   let res: Response
   try {
-    res = await fetch(base.replace(/\/$/, '') + ruta, {
+    res = await conTurno(() => fetch(base.replace(/\/$/, '') + ruta, {
       method: metodo,
       headers: {
         'Content-Type': 'application/json',
         ...(sesion ? { Authorization: sesion.token } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-    })
+    }))
   } catch {
     throw new ApiError(0, 'No se pudo conectar con el servidor (revisa la URL y CORS)')
   }

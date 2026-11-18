@@ -34,5 +34,7 @@ Rewrite para las rutas de la SPA (Hosting > Rewrites and redirects):
 origen `</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>`,
 destino `/index.html`, tipo `200 (Rewrite)`.
 
-## Falta (siguientes entregas)
-Detalle de proyecto (tareas, presupuesto, recursos, adjuntos, prioridad), Ranking, Recursos, Calendario.
+## Pantallas
+Dashboard, Proyectos (tabla y tablero, con buscador por nombre y filtros de estado y portafolio combinables), detalle de proyecto
+(tareas, presupuesto, recursos, adjuntos, prioridad), Tareas (todas las tareas del tenant), Portafolios, Recursos (filtro por rol,
+quitar asignaciones), Presupuestos (todos los presupuestos del tenant), Priorizacion (pesos y ranking) y Usuarios (solo ADMIN).

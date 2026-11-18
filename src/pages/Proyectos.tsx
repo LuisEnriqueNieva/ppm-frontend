@@ -25,14 +25,15 @@ export default function Proyectos() {
   const [vista, setVista] = useState<Vista>('tabla')
   const [estado, setEstado] = useState('')
   const [portafolio, setPortafolio] = useState('')
+  const [texto, setTexto] = useState('')
   const [nuevo, setNuevo] = useState<EstadoProyecto | null>(null)
   const { data: portafolios = [] } = usePortafolios()
 
   const nombrePortafolio = (id?: string) =>
     id ? (portafolios.find((p) => p.portafolio_id === id)?.nombre ?? id) : 'Sin portafolio'
 
-  // El backend filtra por UNA sola cosa a la vez: al elegir una, se limpia la otra
-  const filtro = estado ? { estado } : portafolio ? { portafolio_id: portafolio } : {}
+  // Estado y portafolio se pueden combinar (el backend aplica los dos); el nombre se busca en pantalla
+  const filtro = { ...(estado ? { estado } : {}), ...(portafolio ? { portafolio_id: portafolio } : {}) }
 
   return (
     <div>
@@ -57,14 +58,20 @@ export default function Proyectos() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2 py-1.5">
+          <input
+            aria-label="Buscar proyecto por nombre"
+            className="h-7 w-48 rounded-full border border-linea bg-transparent px-3 text-sm outline-none transition placeholder:text-tenue focus:border-azul/40"
+            placeholder="Buscar por nombre…"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+          />
           {vista === 'tabla' ? (
-            <>
-              <span className="relative">
+            <span className="relative">
               <select
                 aria-label="Filtrar por estado"
                 className={filtroCss(!!estado)}
                 value={estado}
-                onChange={(e) => { setEstado(e.target.value); setPortafolio('') }}
+                onChange={(e) => setEstado(e.target.value)}
               >
                 <option value="">Estado</option>
                 {ESTADOS.map((s) => (
@@ -72,30 +79,29 @@ export default function Proyectos() {
                 ))}
               </select>
               <Icono n="abajo" className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-tenue" />
-              </span>
-              <span className="relative">
-              <select
-                aria-label="Filtrar por portafolio"
-                className={filtroCss(!!portafolio)}
-                value={portafolio}
-                onChange={(e) => { setPortafolio(e.target.value); setEstado('') }}
-              >
-                <option value="">Portafolio</option>
-                {portafolios.map((p) => (
-                  <option key={p.portafolio_id} value={p.portafolio_id}>{p.nombre}</option>
-                ))}
-              </select>
-              <Icono n="abajo" className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-tenue" />
-              </span>
-              {estado || portafolio ? (
-                <button
-                  onClick={() => { setEstado(''); setPortafolio('') }}
-                  className="h-7 rounded-md px-2 text-sm text-tenue transition hover:bg-hover hover:text-texto"
-                >
-                  Limpiar
-                </button>
-              ) : null}
-            </>
+            </span>
+          ) : null}
+          <span className="relative">
+            <select
+              aria-label="Filtrar por portafolio"
+              className={filtroCss(!!portafolio)}
+              value={portafolio}
+              onChange={(e) => setPortafolio(e.target.value)}
+            >
+              <option value="">Portafolio</option>
+              {portafolios.map((p) => (
+                <option key={p.portafolio_id} value={p.portafolio_id}>{p.nombre}</option>
+              ))}
+            </select>
+            <Icono n="abajo" className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-tenue" />
+          </span>
+          {(vista === 'tabla' && estado) || portafolio || texto ? (
+            <button
+              onClick={() => { setEstado(''); setPortafolio(''); setTexto('') }}
+              className="h-7 rounded-md px-2 text-sm text-tenue transition hover:bg-hover hover:text-texto"
+            >
+              Limpiar
+            </button>
           ) : null}
           <BotonPrimario onClick={() => setNuevo('PLANIFICADO')}>
             <Icono n="mas" className="h-3.5 w-3.5" /> Nuevo
@@ -105,9 +111,9 @@ export default function Proyectos() {
 
       <div className="pt-1">
         {vista === 'tabla' ? (
-          <VistaTabla filtro={filtro} nombrePortafolio={nombrePortafolio} onNuevo={() => setNuevo('PLANIFICADO')} />
+          <VistaTabla filtro={filtro} texto={texto} nombrePortafolio={nombrePortafolio} onNuevo={() => setNuevo('PLANIFICADO')} />
         ) : (
-          <VistaKanban nombrePortafolio={nombrePortafolio} onNuevo={setNuevo} />
+          <VistaKanban portafolio={portafolio} texto={texto} nombrePortafolio={nombrePortafolio} onNuevo={setNuevo} />
         )}
       </div>
       {nuevo ? <NuevoProyecto estadoInicial={nuevo} onCerrar={() => setNuevo(null)} /> : null}

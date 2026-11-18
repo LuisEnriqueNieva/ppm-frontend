@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useAsignaciones, useCrearRecurso, useEliminarRecurso, useModificarRecurso, useRecurso, useRecursos } from '../lib/servicios'
-import { BotonPrimario, Cargando, Campo, Encabezado, entrada } from '../components/ui'
+import { useAsignaciones, useCrearRecurso, useEliminarAsignacion, useEliminarRecurso, useModificarRecurso, useRecurso, useRecursos } from '../lib/servicios'
+import { useCargarTodo, useProyectos } from '../lib/hooks'
+import { BotonPrimario, Cargando, Campo, Encabezado, ErrorMsg, entrada } from '../components/ui'
 import { Icono } from '../components/Iconos'
 import { Estado, FilaNuevo, ModalConfirmar, ModalForm, PieLista, Tabla, aNumero, numero, useModal } from '../components/comunes'
 import type { Recurso } from '../lib/tipos'
 
-function FormRecurso({ inicial, onCerrar }: { inicial?: Recurso; onCerrar: () => void }) {
+function FormRecurso({ inicial, roles, onCerrar }: { inicial?: Recurso; roles: string[]; onCerrar: () => void }) {
   const crear = useCrearRecurso()
   const modificar = useModificarRecurso()
   const eliminar = useEliminarRecurso()
@@ -19,13 +20,18 @@ function FormRecurso({ inicial, onCerrar }: { inicial?: Recurso; onCerrar: () =>
   })
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }))
   const accion = inicial ? modificar : crear
-  const nAsignaciones = asignaciones.data?.pages.flatMap((p) => p.items).length ?? 0
+  const lista = asignaciones.data?.pages.flatMap((p) => p.items) ?? []
+  const nAsignaciones = lista.length
+  const quitar = useEliminarAsignacion()
+  const proyectos = useProyectos({}, 100)
+  const todosProyectos = proyectos.data?.pages.flatMap((p) => p.items)
+  const nombreProyecto = (id: string) => (todosProyectos ? (todosProyectos.find((x) => x.proyecto_id === id)?.nombre ?? 'Proyecto eliminado') : id)
 
   if (confirmar && inicial)
     return (
       <ModalConfirmar
         titulo="Eliminar recurso"
-        texto={`¿Eliminar el recurso “${inicial.nombre}”? Si tiene asignaciones, el sistema no lo permitirá.`}
+        texto={`¿Eliminar el recurso “${inicial.nombre}”? Si tiene asignaciones, primero quítalas desde la ventana del recurso.`}
         cargando={eliminar.isPending}
         error={eliminar.error}
         onCerrar={() => setConfirmar(false)}
@@ -54,9 +60,29 @@ function FormRecurso({ inicial, onCerrar }: { inicial?: Recurso; onCerrar: () =>
         ) : null
       }
     >
-      {inicial ? <p className="mb-4 text-sm text-suave">Asignado en <span className="font-medium text-texto">{nAsignaciones}</span> {nAsignaciones === 1 ? 'proyecto' : 'proyectos'}.</p> : null}
+      {inicial ? <p className="mb-2 text-sm text-suave">Asignado en <span className="font-medium text-texto">{nAsignaciones}</span> {nAsignaciones === 1 ? 'proyecto' : 'proyectos'}.</p> : null}
+      {inicial && nAsignaciones > 0 ? (
+        <div className="mb-4">
+          <p className="mb-1 text-xs text-tenue">Para eliminar el recurso, quita primero sus asignaciones.</p>
+          {lista.map((a) => (
+            <div key={a.asignacion_id} className="flex items-center gap-2 border-b border-linea py-1.5 text-sm">
+              <span className="min-w-0 flex-1 truncate">{nombreProyecto(a.proyecto_id)}</span>
+              <span className="tabular-nums text-suave">{a.horas} h</span>
+              <button
+                type="button"
+                disabled={quitar.isPending}
+                onClick={() => quitar.mutate(a.asignacion_id)}
+                className="rounded-md px-2 py-1 text-xs text-[#c4554d] transition hover:bg-[#fdebec] disabled:opacity-50"
+              >
+                Quitar
+              </button>
+            </div>
+          ))}
+          {quitar.error ? <div className="pt-2"><ErrorMsg error={quitar.error} /></div> : null}
+        </div>
+      ) : null}
       <Campo etiqueta="Nombre"><input className={entrada} value={f.nombre} onChange={(e) => set('nombre', e.target.value)} placeholder="Nombre de la persona o equipo" autoFocus /></Campo>
-      <Campo etiqueta="Rol"><input className={entrada} value={f.rol} onChange={(e) => set('rol', e.target.value)} placeholder="Desarrollador, Diseñador…" /></Campo>
+      <Campo etiqueta="Rol"><input className={entrada} list="roles-existentes" value={f.rol} onChange={(e) => set('rol', e.target.value)} placeholder="Desarrollador, Diseñador…" /><datalist id="roles-existentes">{roles.map((r) => <option key={r} value={r} />)}</datalist></Campo>
       <div className="grid grid-cols-2 gap-3">
         <Campo etiqueta="Costo por hora"><input type="number" min="0" step="0.01" className={entrada} value={f.costo_hora} onChange={(e) => set('costo_hora', e.target.value)} /></Campo>
         <Campo etiqueta="Capacidad semanal (horas)"><input type="number" min="0" step="1" className={entrada} value={f.capacidad_semanal} onChange={(e) => set('capacidad_semanal', e.target.value)} /></Campo>
@@ -66,7 +92,7 @@ function FormRecurso({ inicial, onCerrar }: { inicial?: Recurso; onCerrar: () =>
 }
 
 // Abre el recurso consultándolo al backend (endpoint buscar)
-function EditarRecurso({ recurso_id, onCerrar }: { recurso_id: string; onCerrar: () => void }) {
+function EditarRecurso({ recurso_id, roles, onCerrar }: { recurso_id: string; roles: string[]; onCerrar: () => void }) {
   const q = useRecurso(recurso_id)
   if (!q.data)
     return (
@@ -74,16 +100,19 @@ function EditarRecurso({ recurso_id, onCerrar }: { recurso_id: string; onCerrar:
         {q.isLoading ? <Cargando /> : null}
       </ModalForm>
     )
-  return <FormRecurso inicial={q.data} onCerrar={onCerrar} />
+  return <FormRecurso inicial={q.data} roles={roles} onCerrar={onCerrar} />
 }
 
 export default function Recursos() {
   const [rol, setRol] = useState('')
-  const [filtro, setFiltro] = useState('')
-  const q = useRecursos(filtro || undefined)
+  const q = useRecursos()
+  // Se cargan todos los recursos para armar el desplegable con los roles que de verdad existen
+  useCargarTodo(q)
   const nuevo = useModal()
   const editar = useModal<string>()
-  const filas = q.data?.pages.flatMap((p) => p.items) ?? []
+  const todos = q.data?.pages.flatMap((p) => p.items) ?? []
+  const roles = [...new Set(todos.map((r) => r.rol).filter((r): r is string => !!r))].sort((a, b) => a.localeCompare(b))
+  const filas = rol ? todos.filter((r) => r.rol === rol) : todos
 
   return (
     <div>
@@ -93,19 +122,18 @@ export default function Recursos() {
         descripcion="Personas y equipos que puedes asignar a los proyectos."
         acciones={<BotonPrimario onClick={() => nuevo.abrir()}><Icono n="mas" className="h-3.5 w-3.5" /> Nuevo recurso</BotonPrimario>}
       />
-      <form
-        className="flex items-center gap-2 border-b border-linea py-2"
-        onSubmit={(e) => { e.preventDefault(); setFiltro(rol.trim()) }}
-      >
-        <input
+      <div className="flex items-center gap-2 border-b border-linea py-2">
+        <select
           aria-label="Filtrar por rol"
-          className="h-7 w-52 rounded-full border border-linea bg-transparent px-3 text-sm outline-none transition placeholder:text-tenue focus:border-azul/40"
-          placeholder="Filtrar por rol (exacto)"
+          className={`h-7 max-w-56 cursor-pointer rounded-full border px-3 text-sm outline-none transition ${rol ? 'border-azul/30 bg-azul/10 text-azul' : 'border-linea bg-transparent text-suave hover:bg-hover'}`}
           value={rol}
           onChange={(e) => setRol(e.target.value)}
-        />
-        {filtro ? <button type="button" onClick={() => { setRol(''); setFiltro('') }} className="h-7 rounded-md px-2 text-sm text-tenue transition hover:bg-hover hover:text-texto">Limpiar</button> : null}
-      </form>
+        >
+          <option value="">Todos los roles</option>
+          {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        {rol ? <button type="button" onClick={() => setRol('')} className="h-7 rounded-md px-2 text-sm text-tenue transition hover:bg-hover hover:text-texto">Limpiar</button> : null}
+      </div>
       <Estado q={q}>
         <Tabla
           columnas={[['Nombre', 'usuario', 'min-w-[220px]'], ['Rol', 'texto', 'min-w-[160px]'], ['Costo por hora', 'moneda', 'min-w-[130px]'], ['Capacidad semanal', 'progreso', 'min-w-[150px]']]}
@@ -128,8 +156,8 @@ export default function Recursos() {
           }
         />
       </Estado>
-      {nuevo.valor ? <FormRecurso onCerrar={nuevo.cerrar} /> : null}
-      {editar.valor ? <EditarRecurso recurso_id={editar.valor} onCerrar={editar.cerrar} /> : null}
+      {nuevo.valor ? <FormRecurso roles={roles} onCerrar={nuevo.cerrar} /> : null}
+      {editar.valor ? <EditarRecurso recurso_id={editar.valor} roles={roles} onCerrar={editar.cerrar} /> : null}
     </div>
   )
 }

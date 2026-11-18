@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { useProyectos, type FiltroProyectos } from '../lib/hooks'
-import { fecha } from '../lib/formato'
+import { useCargarTodo, useProyectos, type FiltroProyectos } from '../lib/hooks'
+import { coincide, fecha } from '../lib/formato'
 import { Icono } from './Iconos'
 import { AccionesProyecto } from './AccionesProyecto'
 import { Avance, Cargando, ErrorMsg, EstadoBadge, ExcedidoBadge, PrioridadBadge } from './ui'
@@ -17,15 +17,18 @@ const COLUMNAS: [string, string, string][] = [
 
 const celda = 'h-[37px] border-r border-linea px-2 last:border-r-0'
 
-export default function VistaTabla({ filtro, nombrePortafolio, onNuevo }: {
+export default function VistaTabla({ filtro, texto = '', nombrePortafolio, onNuevo }: {
   filtro: FiltroProyectos
+  texto?: string
   nombrePortafolio: (id?: string) => string
   onNuevo?: () => void
 }) {
   const q = useProyectos(filtro, 20)
+  // Al buscar por nombre se traen todas las páginas, para encontrar el proyecto aunque no esté en la primera
+  useCargarTodo(q, !!texto.trim())
   if (q.isLoading) return <Cargando />
   if (q.error) return <div className="pt-3"><ErrorMsg error={q.error} /></div>
-  const filas = q.data?.pages.flatMap((p) => p.items) ?? []
+  const filas = (q.data?.pages.flatMap((p) => p.items) ?? []).filter((p) => coincide(p.nombre, texto))
 
   return (
     <div>

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { post } from './api'
 import type { Pagina, Portafolio, Proyecto, Resumen } from './tipos'
@@ -31,4 +32,18 @@ export function useResumen() {
     queryKey: ['resumen'],
     queryFn: async () => (await post<{ resumen: Resumen }>('proyectos', '/resumen/obtener')).resumen,
   })
+}
+
+// Pide las páginas que faltan, una a la vez y hasta un máximo (por defecto 3 páginas).
+// Más allá de ese máximo la persona usa el botón "Cargar más": así no se disparan cientos de peticiones.
+export function useCargarTodo(
+  q: { data?: { pages: unknown[] }; hasNextPage: boolean; isFetchingNextPage: boolean; fetchNextPage: () => unknown },
+  activo = true,
+  maxPaginas = 3,
+) {
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = q
+  const paginas = q.data?.pages.length ?? 0
+  useEffect(() => {
+    if (activo && hasNextPage && !isFetchingNextPage && paginas < maxPaginas) fetchNextPage()
+  }, [activo, hasNextPage, isFetchingNextPage, fetchNextPage, paginas, maxPaginas])
 }

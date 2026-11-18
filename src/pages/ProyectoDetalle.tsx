@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { usePortafolios } from '../lib/hooks'
 import { useEliminarProyecto, useProyecto } from '../lib/servicios'
 import { fecha } from '../lib/formato'
@@ -28,7 +28,8 @@ export default function ProyectoDetalle() {
   const q = useProyecto(id)
   const { data: portafolios = [] } = usePortafolios()
   const eliminar = useEliminarProyecto()
-  const [pestana, setPestana] = useState<Pestana>('tareas')
+  const [params] = useSearchParams()
+  const [pestana, setPestana] = useState<Pestana>(PESTANAS.find((x) => x.id === params.get('tab'))?.id ?? 'tareas')
   const editar = useModal()
   const borrar = useModal()
   const p = q.data

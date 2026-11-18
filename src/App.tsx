@@ -8,7 +8,9 @@ import Dashboard from './pages/Dashboard'
 import Proyectos from './pages/Proyectos'
 import ProyectoDetalle from './pages/ProyectoDetalle'
 import Portafolios from './pages/Portafolios'
+import Tareas from './pages/Tareas'
 import Recursos from './pages/Recursos'
+import Presupuestos from './pages/Presupuestos'
 import Priorizacion from './pages/Priorizacion'
 import Usuarios from './pages/Usuarios'
 
@@ -33,8 +35,10 @@ export default function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/proyectos" element={<Proyectos />} />
               <Route path="/proyectos/:id" element={<ProyectoDetalle />} />
+              <Route path="/tareas" element={<Tareas />} />
               <Route path="/portafolios" element={<Portafolios />} />
               <Route path="/recursos" element={<Recursos />} />
+              <Route path="/presupuestos" element={<Presupuestos />} />
               <Route path="/priorizacion" element={<Priorizacion />} />
               <Route path="/usuarios" element={<Usuarios />} />
             </Route>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useAsignaciones, useCrearAsignacion, useRecursos } from '../../lib/servicios'
-import { BotonPrimario, Callout, Campo, entrada } from '../ui'
+import { useAsignaciones, useCrearAsignacion, useEliminarAsignacion, useRecursos } from '../../lib/servicios'
+import { BotonPrimario, Callout, Campo, ErrorMsg, entrada } from '../ui'
 import { Icono } from '../Iconos'
 import { BarraSeccion, Estado, FilaNuevo, ModalForm, PieLista, Tabla, numero, useModal } from '../comunes'
 
@@ -40,6 +40,7 @@ export default function Asignaciones({ proyecto_id }: { proyecto_id: string }) {
   const q = useAsignaciones({ proyecto_id })
   const recursos = useRecursos()
   const asignar = useModal()
+  const quitar = useEliminarAsignacion()
   const filas = q.data?.pages.flatMap((p) => p.items) ?? []
   const nombre = (id: string) => recursos.data?.pages.flatMap((p) => p.items).find((r) => r.recurso_id === id)?.nombre ?? id
   const total = filas.reduce((s, a) => s + a.costo, 0)
@@ -49,15 +50,17 @@ export default function Asignaciones({ proyecto_id }: { proyecto_id: string }) {
       <BarraSeccion titulo="Recursos asignados al proyecto">
         <BotonPrimario onClick={() => asignar.abrir()}><Icono n="mas" className="h-3.5 w-3.5" /> Asignar recurso</BotonPrimario>
       </BarraSeccion>
-      <Callout icono="💡">Cada asignación suma su costo al <b>costo proyectado</b> del presupuesto (se actualiza por un evento, puede tardar unos segundos).</Callout>
+      <Callout icono="💡">Cada asignación suma su costo al <b>costo proyectado</b> del presupuesto, y al quitarla se descuenta (se actualiza por un evento, puede tardar unos segundos).</Callout>
+      {quitar.error ? <div className="mt-3"><ErrorMsg error={quitar.error} /></div> : null}
       <div className="mt-3">
         <Estado q={q}>
           <Tabla
-            columnas={[['Recurso', 'usuario', 'min-w-[200px]'], ['Horas', 'progreso', 'min-w-[90px]'], ['Costo por hora', 'moneda', 'min-w-[130px]'], ['Costo', 'moneda', 'min-w-[120px]']]}
+            columnas={[['Recurso', 'usuario', 'min-w-[200px]'], ['Horas', 'progreso', 'min-w-[90px]'], ['Costo por hora', 'moneda', 'min-w-[130px]'], ['Costo', 'moneda', 'min-w-[120px]'], ['', 'basura', 'w-24']]}
             vacio="Aún no hay recursos asignados a este proyecto."
             filas={filas.map((a) => ({
               key: a.asignacion_id,
-              celdas: [<span className="font-medium">{nombre(a.recurso_id)}</span>, <span className="tabular-nums">{a.horas}</span>, <span className="tabular-nums text-suave">{numero(a.costo_hora)}</span>, <span className="tabular-nums">{numero(a.costo)}</span>],
+              celdas: [<span className="font-medium">{nombre(a.recurso_id)}</span>, <span className="tabular-nums">{a.horas}</span>, <span className="tabular-nums text-suave">{numero(a.costo_hora)}</span>, <span className="tabular-nums">{numero(a.costo)}</span>,
+                <button type="button" disabled={quitar.isPending} onClick={() => quitar.mutate(a.asignacion_id)} className="rounded-md px-2 py-1 text-xs text-[#c4554d] transition hover:bg-[#fdebec] disabled:opacity-50">Quitar</button>],
             }))}
             pie={
               <>

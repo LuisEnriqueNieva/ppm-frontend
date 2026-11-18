@@ -126,6 +126,10 @@ export function useSubirAdjunto(proyecto_id: string) {
 export const useTareas = (proyecto_id: string) =>
   usePaginado<Tarea>(['tareas'], 'tareas', '/tareas/listar', { proyecto_id }, 50)
 
+// Tareas de todos los proyectos del tenant (pantalla Tareas); se puede filtrar por estado y por proyecto
+export const useTodasTareas = (filtro: { estado?: string; proyecto_id?: string }) =>
+  usePaginado<Tarea>(['tareas', 'todas'], 'tareas', '/tareas/listar', filtro, 50)
+
 export const useTarea = (tarea_id: string) =>
   useQuery({
     queryKey: ['tarea', tarea_id],
@@ -151,7 +155,7 @@ export const usePresupuesto = (proyecto_id: string) =>
         (await post<{ presupuesto: Presupuesto }>('presupuestos', '/presupuestos/buscar', { proyecto_id })).presupuesto),
   })
 
-const DESPUES_PRESUPUESTO = [['presupuesto'], ['gastos'], ['proyecto'], ['proyectos'], ['resumen']]
+const DESPUES_PRESUPUESTO = [['presupuesto'], ['presupuestos'], ['gastos'], ['proyecto'], ['proyectos'], ['resumen']]
 export const useCrearPresupuesto = () =>
   useAccion((v: { proyecto_id: string; monto_total: number }) => post('presupuestos', '/presupuestos/crear', v), DESPUES_PRESUPUESTO)
 export const useModificarPresupuesto = () =>
@@ -162,6 +166,10 @@ export const useRegistrarGasto = () =>
     DESPUES_PRESUPUESTO,
     true,
   )
+// Todos los presupuestos del tenant (pantalla Presupuestos); estado_presupuesto: NORMAL o EXCEDIDO
+export const usePresupuestos = (estado_presupuesto?: string) =>
+  usePaginado<Presupuesto>(['presupuestos'], 'presupuestos', '/presupuestos/listar', estado_presupuesto ? { estado_presupuesto } : {}, 50)
+
 export const useGastos = (proyecto_id: string) =>
   usePaginado<Gasto>(['gastos'], 'presupuestos', '/gastos/listar', { proyecto_id }, 50)
 
@@ -186,11 +194,17 @@ export const useEliminarRecurso = () =>
 
 export const useAsignaciones = (filtro: { proyecto_id?: string; recurso_id?: string }, activo = true) =>
   usePaginado<Asignacion>(['asignaciones'], 'recursos', '/asignaciones/listar', filtro, 50, activo)
-// Crear una asignación suma al costo_proyectado del presupuesto (evento), por eso se refresca el presupuesto
+// Crear o quitar una asignación cambia el costo_proyectado del presupuesto (evento), por eso se refresca el presupuesto
 export const useCrearAsignacion = () =>
   useAccion(
     (v: { proyecto_id: string; recurso_id: string; horas: number }) => post('recursos', '/asignaciones/crear', v),
-    [['asignaciones'], ['presupuesto']],
+    [['asignaciones'], ['presupuesto'], ['presupuestos']],
+    true,
+  )
+export const useEliminarAsignacion = () =>
+  useAccion(
+    (asignacion_id: string) => del('recursos', '/asignaciones/eliminar', { asignacion_id }),
+    [['asignaciones'], ['presupuesto'], ['presupuestos']],
     true,
   )
 
