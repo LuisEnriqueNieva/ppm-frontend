@@ -1,6 +1,3 @@
-// Capa de acceso a los 6 microservicios. Cada uno tiene su propia URL (su propio API Gateway).
-// Los Lambdas devuelven HTTP 200 siempre; el codigo real viene dentro del JSON (statusCode).
-
 const BASES = {
   auth: import.meta.env.VITE_API_AUTH as string,
   proyectos: import.meta.env.VITE_API_PROYECTOS as string,
@@ -18,7 +15,6 @@ export interface Sesion {
   rol: string
 }
 
-// sessionStorage: cada pestaña tiene su propia sesion (util para la demo con 2 tenants)
 const CLAVE = 'ppm_sesion'
 export const leerSesion = (): Sesion | null => {
   try {
@@ -38,19 +34,18 @@ export class ApiError extends Error {
   }
 }
 
-// Maximo 2 peticiones al mismo tiempo (cada una ejecuta 1 Lambda, y a veces otra para validar el token).
-// Asi nunca hay muchos Lambdas simultaneos en el Learner Lab, sin importar cuantas pantallas pidan datos.
-const MAX_SIMULTANEAS = 2
+const MAX_SIMULTANEAS = 1
 let enCurso = 0
 const espera: Array<() => void> = []
 async function conTurno<T>(tarea: () => Promise<T>): Promise<T> {
   if (enCurso >= MAX_SIMULTANEAS) await new Promise<void>((seguir) => espera.push(seguir))
-  enCurso++
+  else enCurso++
   try {
     return await tarea()
   } finally {
-    enCurso--
-    espera.shift()?.()
+    const siguiente = espera.shift()
+    if (siguiente) siguiente()
+    else enCurso--
   }
 }
 
@@ -79,7 +74,6 @@ async function llamar<T>(micro: Micro, metodo: string, ruta: string, body?: unkn
   }
   const codigo = (datos.statusCode as number | undefined) ?? res.status
   if (codigo === 403 && sesion) {
-    // token vencido o inválido: volver al login
     borrarSesion()
     window.location.href = '/login'
   }
