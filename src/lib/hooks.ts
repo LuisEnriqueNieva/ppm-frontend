@@ -6,6 +6,7 @@ import type { Pagina, Portafolio, Proyecto, Resumen } from './tipos'
 export interface FiltroProyectos {
   estado?: string
   portafolio_id?: string
+  texto?: string
 }
 
 // Paginacion con last_key: cada "Cargar mas" pide la pagina siguiente al backend

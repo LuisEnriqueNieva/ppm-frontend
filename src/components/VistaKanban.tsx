@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { put } from '../lib/api'
-import { useCargarTodo, useProyectos } from '../lib/hooks'
-import { coincide, fecha } from '../lib/formato'
+import { useProyectos } from '../lib/hooks'
+import { fecha } from '../lib/formato'
 import { ESTADOS, type EstadoProyecto, type Proyecto } from '../lib/tipos'
 import { Icono } from './Iconos'
 import { AccionesProyecto } from './AccionesProyecto'
@@ -24,10 +24,9 @@ function Columna({ estado, portafolio, texto, nombrePortafolio, onSoltar, onNuev
   onSoltar: (proyecto_id: string, estadoOrigen: string, destino: EstadoProyecto) => void
   onNuevo?: (estado: EstadoProyecto) => void
 }) {
-  const q = useProyectos({ estado, ...(portafolio ? { portafolio_id: portafolio } : {}) }, 10)
-  useCargarTodo(q, !!texto.trim())
+  const q = useProyectos({ estado, ...(portafolio ? { portafolio_id: portafolio } : {}), ...(texto ? { texto } : {}) }, 10)
   const [encima, setEncima] = useState(false)
-  const items: Proyecto[] = (q.data?.pages.flatMap((p) => p.items) ?? []).filter((p) => coincide(p.nombre, texto))
+  const items: Proyecto[] = q.data?.pages.flatMap((p) => p.items) ?? []
 
   return (
     <div

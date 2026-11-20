@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePortafolios } from '../lib/hooks'
 import { ESTADOS, ETIQUETA_ESTADO, type EstadoProyecto } from '../lib/tipos'
 import { BotonPrimario, Encabezado } from '../components/ui'
@@ -26,14 +26,20 @@ export default function Proyectos() {
   const [estado, setEstado] = useState('')
   const [portafolio, setPortafolio] = useState('')
   const [texto, setTexto] = useState('')
+  const [busqueda, setBusqueda] = useState('')
   const [nuevo, setNuevo] = useState<EstadoProyecto | null>(null)
   const { data: portafolios = [] } = usePortafolios()
+
+  useEffect(() => {
+    const espera = setTimeout(() => setBusqueda(texto.trim()), 400)
+    return () => clearTimeout(espera)
+  }, [texto])
 
   const nombrePortafolio = (id?: string) =>
     id ? (portafolios.find((p) => p.portafolio_id === id)?.nombre ?? id) : 'Sin portafolio'
 
-  // Estado y portafolio se pueden combinar (el backend aplica los dos); el nombre se busca en pantalla
-  const filtro = { ...(estado ? { estado } : {}), ...(portafolio ? { portafolio_id: portafolio } : {}) }
+  // Estado, portafolio y nombre se pueden combinar (el backend aplica los tres)
+  const filtro = { ...(estado ? { estado } : {}), ...(portafolio ? { portafolio_id: portafolio } : {}), ...(busqueda ? { texto: busqueda } : {}) }
 
   return (
     <div>
@@ -111,9 +117,9 @@ export default function Proyectos() {
 
       <div className="pt-1">
         {vista === 'tabla' ? (
-          <VistaTabla filtro={filtro} texto={texto} nombrePortafolio={nombrePortafolio} onNuevo={() => setNuevo('PLANIFICADO')} />
+          <VistaTabla filtro={filtro} nombrePortafolio={nombrePortafolio} onNuevo={() => setNuevo('PLANIFICADO')} />
         ) : (
-          <VistaKanban portafolio={portafolio} texto={texto} nombrePortafolio={nombrePortafolio} onNuevo={setNuevo} />
+          <VistaKanban portafolio={portafolio} texto={busqueda} nombrePortafolio={nombrePortafolio} onNuevo={setNuevo} />
         )}
       </div>
       {nuevo ? <NuevoProyecto estadoInicial={nuevo} onCerrar={() => setNuevo(null)} /> : null}
