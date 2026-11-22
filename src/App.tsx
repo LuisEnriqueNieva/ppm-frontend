@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, useAuth } from './lib/auth'
 import Layout from './components/Layout'
@@ -13,6 +13,7 @@ import Recursos from './pages/Recursos'
 import Presupuestos from './pages/Presupuestos'
 import Priorizacion from './pages/Priorizacion'
 import Usuarios from './pages/Usuarios'
+import { idDeSlug, leerUltimoTenant, rutaLogin } from './lib/tenants'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
@@ -20,7 +21,15 @@ const queryClient = new QueryClient({
 
 function Privado() {
   const { sesion } = useAuth()
-  return sesion ? <Layout /> : <Navigate to="/inicio" replace />
+  if (sesion) return <Layout />
+  const ultimo = leerUltimoTenant()
+  return <Navigate to={ultimo ? rutaLogin(ultimo) : '/inicio'} replace />
+}
+
+function EntradaTenant() {
+  const { tenant } = useParams()
+  const id = idDeSlug(tenant)
+  return <Navigate to={id ? rutaLogin(id) : '/inicio'} replace />
 }
 
 export default function App() {
@@ -30,7 +39,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/inicio" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/:tenant/login" element={<Login />} />
+            <Route path="/login" element={<Navigate to="/inicio" replace />} />
             <Route element={<Privado />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/proyectos" element={<Proyectos />} />
@@ -42,6 +52,7 @@ export default function App() {
               <Route path="/priorizacion" element={<Priorizacion />} />
               <Route path="/usuarios" element={<Usuarios />} />
             </Route>
+            <Route path="/:tenant" element={<EntradaTenant />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

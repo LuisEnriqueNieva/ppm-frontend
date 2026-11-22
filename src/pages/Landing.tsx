@@ -4,6 +4,7 @@ import { Logo } from '../components/Logo'
 import { Icono } from '../components/Iconos'
 import { Etiqueta, EstadoBadge, PrioridadBadge, ExcedidoBadge, HEX_ESTADO } from '../components/ui'
 import type { EstadoProyecto, Prioridad } from '../lib/tipos'
+import { leerUltimoTenant, rutaLogin } from '../lib/tenants'
 
 // Landing pública de Tuesday. Las maquetas usan los mismos componentes y colores que la app real.
 
@@ -369,6 +370,8 @@ const BotonAzul = ({ to, children }: { to: string; children: ReactNode }) => (
 
 export default function Landing() {
   useRevelar()
+  const ultimo = leerUltimoTenant()
+  const ruta = ultimo ? rutaLogin(ultimo) : null
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-texto">
       <style>{`
@@ -387,12 +390,16 @@ export default function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-1.5">
-            <Link to="/login" className="hidden rounded-md px-3 py-1.5 text-[15px] text-suave transition hover:bg-hover hover:text-texto sm:inline-flex">
-              Iniciar sesión
-            </Link>
-            <Link to="/login" className="inline-flex h-8 items-center rounded-md bg-texto px-3 text-sm font-medium text-white transition hover:bg-black">
-              Entrar
-            </Link>
+            {ruta ? (
+              <>
+                <Link to={ruta} className="hidden rounded-md px-3 py-1.5 text-[15px] text-suave transition hover:bg-hover hover:text-texto sm:inline-flex">
+                  Iniciar sesión
+                </Link>
+                <Link to={ruta} className="inline-flex h-8 items-center rounded-md bg-texto px-3 text-sm font-medium text-white transition hover:bg-black">
+                  Entrar
+                </Link>
+              </>
+            ) : null}
           </div>
         </div>
       </header>
@@ -412,7 +419,7 @@ export default function Landing() {
             Tuesday reúne el avance, el presupuesto y las prioridades de cada proyecto, para que tu organización decida con datos y no con hojas de cálculo sueltas.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-            <BotonAzul to="/login">Entrar a mi organización <Icono n="flecha" /></BotonAzul>
+            {ruta ? <BotonAzul to={ruta}>Entrar a mi organización <Icono n="flecha" /></BotonAzul> : null}
             <a href="#producto" className="inline-flex h-10 items-center rounded-lg bg-[#e6f1fb] px-4 text-[15px] font-medium text-azul transition hover:bg-[#d8e9f9]">
               Ver el producto
             </a>
@@ -480,9 +487,9 @@ export default function Landing() {
         <div className="revelar mx-auto max-w-3xl text-center">
           <p className="text-5xl">🗂️</p>
           <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em] sm:text-6xl">Tu portafolio, ordenado desde el primer día.</h2>
-          <p className="mt-4 text-lg text-suave">Entra con las credenciales de tu organización.</p>
+          <p className="mt-4 text-lg text-suave">Cada organización entra desde su propia dirección.</p>
           <div className="mt-8 flex justify-center">
-            <BotonAzul to="/login">Iniciar sesión <Icono n="flecha" /></BotonAzul>
+            {ruta ? <BotonAzul to={ruta}>Iniciar sesión <Icono n="flecha" /></BotonAzul> : null}
           </div>
         </div>
       </section>
@@ -496,7 +503,7 @@ export default function Landing() {
           <div className="flex gap-1 text-sm text-suave">
             <a href="#producto" className="rounded-md px-2 py-1 hover:bg-hover hover:text-texto">Producto</a>
             <a href="#funciones" className="rounded-md px-2 py-1 hover:bg-hover hover:text-texto">Funciones</a>
-            <Link to="/login" className="rounded-md px-2 py-1 hover:bg-hover hover:text-texto">Iniciar sesión</Link>
+            {ruta ? <Link to={ruta} className="rounded-md px-2 py-1 hover:bg-hover hover:text-texto">Iniciar sesión</Link> : null}
           </div>
           <p className="text-sm text-tenue">© {new Date().getFullYear()} Tuesday</p>
         </div>

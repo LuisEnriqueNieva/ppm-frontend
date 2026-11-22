@@ -1,3 +1,5 @@
+import { leerUltimoTenant, rutaLogin } from './tenants'
+
 const BASES = {
   auth: import.meta.env.VITE_API_AUTH as string,
   proyectos: import.meta.env.VITE_API_PROYECTOS as string,
@@ -75,7 +77,8 @@ async function llamar<T>(micro: Micro, metodo: string, ruta: string, body?: unkn
   const codigo = (datos.statusCode as number | undefined) ?? res.status
   if (codigo === 403 && sesion) {
     borrarSesion()
-    window.location.href = '/login'
+    const ultimo = leerUltimoTenant()
+    window.location.href = ultimo ? rutaLogin(ultimo) : '/inicio'
   }
   if (codigo !== 200) {
     const msg = (datos.mensaje ?? datos.errorMessage ?? datos.message ?? 'Error') as string

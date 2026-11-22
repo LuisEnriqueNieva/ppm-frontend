@@ -1,21 +1,22 @@
 import { useState, type CSSProperties, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
-import { TENANTS, colorDeTenant } from '../lib/tenants'
+import { TENANTS, colorDeTenant, idDeSlug, nombreDeTenant } from '../lib/tenants'
 import { BotonPrimario, Campo, ErrorMsg, entrada } from '../components/ui'
-import { Icono } from '../components/Iconos'
 import { Logo } from '../components/Logo'
 
 export default function Login() {
-  const { sesion, entrar } = useAuth()
+  const { sesion, entrar, salir } = useAuth()
   const navegar = useNavigate()
-  const [tenant, setTenant] = useState('ACM')
+  const { tenant: slug } = useParams()
+  const tenant = idDeSlug(slug)
   const [usuario, setUsuario] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<unknown>(null)
   const [cargando, setCargando] = useState(false)
 
-  if (sesion) return <Navigate to="/" replace />
+  if (!tenant) return <Navigate to="/inicio" replace />
+  if (sesion && sesion.tenant_id === tenant) return <Navigate to="/" replace />
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault()
@@ -43,43 +44,33 @@ export default function Login() {
       </header>
 
       <main className="flex flex-1 justify-center px-4 pb-16 pt-[8vh]">
-        {/* El acento del formulario adopta el color de la organización elegida */}
+        {sesion ? (
+          <div className="anim-aparecer w-full max-w-[340px]">
+            <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">Sesión abierta</h1>
+            <p className="mb-6 mt-1 text-[15px] text-suave">
+              Esta pestaña tiene una sesión activa en {nombreDeTenant(sesion.tenant_id)}. Ciérrala para entrar a {nombreDeTenant(tenant)}.
+            </p>
+            <BotonPrimario type="button" onClick={salir} className="h-10 w-full">
+              Cerrar sesión
+            </BotonPrimario>
+          </div>
+        ) : (
         <form
           onSubmit={enviar}
           className="anim-aparecer w-full max-w-[340px]"
           style={{ '--acento': colorDeTenant(tenant) } as CSSProperties}
         >
+          <div className="mb-6 flex items-center gap-2.5">
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-white"
+              style={{ background: TENANTS[tenant].color }}
+            >
+              {TENANTS[tenant].nombre.slice(0, 1)}
+            </span>
+            <span className="text-[17px] font-semibold">{TENANTS[tenant].nombre}</span>
+          </div>
           <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em]">Inicia sesión</h1>
-          <p className="mb-8 mt-1 text-[15px] text-suave">Entra al espacio de trabajo de tu organización.</p>
-
-          <fieldset className="mb-4">
-            <legend className="mb-1.5 text-xs font-medium text-suave">Organización</legend>
-            <div className="space-y-1">
-              {Object.entries(TENANTS).map(([id, t]) => {
-                const activo = id === tenant
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setTenant(id)}
-                    aria-pressed={activo}
-                    className={`flex h-10 w-full items-center gap-2.5 rounded-md border px-2.5 text-left text-sm transition ${
-                      activo ? 'border-acento/50 bg-acento/5' : 'border-linea hover:bg-hover'
-                    }`}
-                  >
-                    <span
-                      className="flex h-6 w-6 items-center justify-center rounded-[5px] text-xs font-semibold text-white"
-                      style={{ background: t.color }}
-                    >
-                      {t.nombre.slice(0, 1)}
-                    </span>
-                    <span className="flex-1 font-medium">{t.nombre}</span>
-                    {activo ? <Icono n="check" className="h-4 w-4 text-acento" /> : null}
-                  </button>
-                )
-              })}
-            </div>
-          </fieldset>
+          <p className="mb-8 mt-1 text-[15px] text-suave">Entra al espacio de trabajo de {TENANTS[tenant].nombre}.</p>
 
           <Campo etiqueta="Usuario">
             <input
@@ -112,6 +103,7 @@ export default function Login() {
             Tus datos sólo son visibles dentro de tu organización.
           </p>
         </form>
+        )}
       </main>
     </div>
   )

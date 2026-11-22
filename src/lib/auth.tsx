@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { borrarSesion, guardarSesion, leerSesion, post, type Sesion } from './api'
-import { colorDeTenant } from './tenants'
+import { colorDeTenant, guardarUltimoTenant } from './tenants'
 
 interface Ctx {
   sesion: Sesion | null
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       rol: r.rol,
     }
     guardarSesion(s)
+    guardarUltimoTenant(s.tenant_id)
     pintar(s.tenant_id)
     setSesion(s)
   }
